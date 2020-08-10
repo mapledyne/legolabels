@@ -39,10 +39,11 @@ def createImage(w, h, partImg):
     img = Image.open(partImg, 'r')
     global img_w, img_h
     img_w, img_h = img.size
+    pad_h = h // 7
     # background = Image.new('RGBA', (w, h), (255, 255, 255, 255))
     background = ImageText((w, h), background=(255, 255, 255, 255))
     bg_w, bg_h = background.image.size
-    offset = ((bg_w - img_w) // 2, 50)
+    offset = ((bg_w - img_w) // 2, pad_h)
     background.image.paste(img, offset)
     return background
 
@@ -156,10 +157,13 @@ def main(outputFile, partNum, w, h, colours, translucent, cmdLine):
     dims = itemSize.split("x")
     largestDim = 0
     fontSize = 30
-    for dim in dims:
-        dimInt = int(dim.strip())
-        if (dimInt > largestDim):
-            largestDim = dimInt
+    try:
+        for dim in dims:
+            dimInt = int(dim.strip())
+            if (dimInt > largestDim):
+                largestDim = dimInt
+    except ValueError:
+        pass
 
     # check if any text is explicitly given
     try:
@@ -196,10 +200,9 @@ def main(outputFile, partNum, w, h, colours, translucent, cmdLine):
     except:
         pass
 
-    padding = 30
-
+    padding = h // 11  # 30
     x = padding
-    y = padding
+    y = -padding
     biggestY = img_h + padding
     spaceLeft = (w / 2) - (img_w / 2) - padding
     # draw the piece type top left
@@ -228,7 +231,7 @@ def main(outputFile, partNum, w, h, colours, translucent, cmdLine):
     #     biggestY = y
 
     x = w - (spaceLeft + padding)
-    y = padding
+    y = -padding
     # on the right draw the size
     # tx, th = img.write_text_box((x, y),itemSize,box_width=spaceLeft, font_filename=font, font_size=int(fontSize*1.5), color=colour, place="right")
     tx, th = img.write_text_box((x - img_w, y),
@@ -247,7 +250,7 @@ def main(outputFile, partNum, w, h, colours, translucent, cmdLine):
                                 font_size=fontSize,
                                 color=colour,
                                 place="right")
-    y += th + 50
+    y += th + (h // 7) # 50
     # and the part number below that
     tx, th = img.write_text_box((x, y),
                                 partNum,
@@ -259,7 +262,7 @@ def main(outputFile, partNum, w, h, colours, translucent, cmdLine):
     y += th
     # then at the bottom of the image draw the colours
 
-    color_height = 50
+    color_height = h // 7 #  50
 
     if (y > biggestY):
         biggestY = y
@@ -303,6 +306,7 @@ tmpdirpath = tempfile.mkdtemp() + "/"
 # Default with /height from:
 # Assuming px/in for printing = 200
 # 4" x 1.69" for default label
+# (Smaller label should be 3" x 1")
 # Width = 200 * 4
 # Height = 200 * 1.69
 
@@ -335,7 +339,7 @@ except:
 try:
     outputFile = cmdLine["-o"]
 except:
-    outputFile = partNum + ".png"
+    outputFile = partNum + " - " + cmdLine["-colours"] + ".png"
 
 try:
     cmdLine["-colours"] = cmdLine["-colors"]
